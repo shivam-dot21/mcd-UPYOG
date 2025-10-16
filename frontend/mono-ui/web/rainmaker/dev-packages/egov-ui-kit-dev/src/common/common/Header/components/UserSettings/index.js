@@ -39,6 +39,7 @@ class UserSettings extends Component {
     popupTimer: 0,
     designation: "",
     zone: "",
+    showRoles: false,
   };
   style = {
     baseStyle: {
@@ -218,10 +219,10 @@ class UserSettings extends Component {
     this.props.logout();
   };
 
-
   handleClose = () => {
-    this.setState({ ...this.state, open: false });
+    this.setState({ open: false, displayAccInfo: false, showRoles: false });
   };
+
   onLanguageChange = (event, index, value) => {
     //const {setRote} = this.props;
     this.setState({ languageSelected: value });
@@ -278,11 +279,13 @@ class UserSettings extends Component {
     const pad = (num) => String(num).padStart(2, "0");
     const formattedTTL = `${pad(minutes)}:${pad(seconds)}`;
 
+    // ==================== Dynamic User Menu ====================
 
-    // ==================== New DynamicMenuItems ==============
+    // 🧾 BMID
     const bmid = (userInfo && (userInfo.userName || userInfo.bmid)) || "Not Available";
 
-    let userRoleList = [
+    // 👥 Build role list
+    const userRoleList = [
       { value: "", label: "Assigned Roles" },
       ...get(userInfo, "roles", [])
         .map((role) => role.name)
@@ -292,12 +295,12 @@ class UserSettings extends Component {
           label: roleCode,
         })),
     ];
-
+    // Build dynamic menu items
     const dynamicMenuItems = [
       //  BMID (non-clickable)
       {
         primaryText: (
-          <div style={{ fontWeight: "400", padding: "0px 10px", color: "#1e293b" }}>
+          <div style={{ fontWeight: "400", color: "#1e293b" }} onClick={(e) => e.stopPropagation()} >
             BMID: <span style={{ color: "#475569" }}>{bmid}</span>
           </div>
         ),
@@ -305,30 +308,125 @@ class UserSettings extends Component {
         style: { cursor: "default" },
         id: "header-bmid",
       },
-      //Assigned Roles (expandable)
-      // {
-      //   primaryText: <Label label="ASSIGNED_ROLES" />,
-      //   leftIcon: (
-      //     <Icon
-      //       action="social"
-      //       name="supervisor-account"
-      //       className="iconClassHover material-icons whiteColor customMenuItem"
-      //     />
-      //   ),
-      //   nestedItems: userRoleList
-      //     .filter((item) => item.value) // skip the first "Assigned Roles" label
-      //     .map((role) => ({
-      //       primaryText: (
-      //         <span style={{ fontSize: "14px", color: "#475569" }}>
-      //           {role.label}
-      //         </span>
-      //       ),
-      //       disabled: true,
-      //       style: { paddingLeft: "50px" },
-      //     })),
-      //   style: { paddingBottom: "3px", paddingTop: "3px" },
-      //   id: "header-roles",
-      // },
+
+      // Assigned Roles
+      {
+        primaryText: (
+          <div
+            style={{ position: "relative" }}
+            onMouseEnter={() => {
+              if (this.state.displayAccInfo) {
+                clearTimeout(this.roleHoverTimeout);
+                this.roleHoverTimeout = setTimeout(() => {
+                  this.setState({ showRoles: true });
+                }, 150); // small delay to avoid flicker
+              }
+            }}
+            onMouseLeave={() => {
+              clearTimeout(this.roleHoverTimeout);
+              this.roleHoverTimeout = setTimeout(() => {
+                this.setState({ showRoles: false });
+              }, 150);
+            }}
+            onClick={(e) => e.stopPropagation()} // prevent closing parent dropdown
+          >
+            {/* Parent row */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "100%",
+                cursor: "pointer",
+                transition: "background-color 0.3s ease",
+              }}
+            >
+              <span
+                style={{
+                  color: "#1e293b",
+                  fontSize: "14px",
+                }}
+              >
+                Assigned Roles
+              </span>
+              <Icon
+                action="navigation"
+                name="chevron-right"
+                color="#475569"
+                style={{
+                  transition: "transform 0.3s ease",
+                  transform: this.state.showRoles ? "rotate(90deg)" : "rotate(0deg)",
+                  height: "20px",
+                  width: "20px",
+                }}
+              />
+            </div>
+
+            {/* Side dropdown */}
+            {this.state.displayAccInfo && this.state.showRoles && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: "100%",
+                  marginLeft: "8px",
+                  background: "#ffffff",
+                  boxShadow: "0px 4px 12px rgba(0,0,0,0.15)",
+                  borderRadius: "6px",
+                  padding: "6px 0",
+                  zIndex: 2000,
+                  minWidth: "220px",
+                  opacity: 1,
+                  transform: "translateX(0)",
+                  transition: "opacity 0.3s ease, transform 0.3s ease",
+                }}
+                onMouseEnter={() => {
+                  clearTimeout(this.roleHoverTimeout);
+                  this.setState({ showRoles: true }); // keep open when hovering over roles list
+                }}
+                onMouseLeave={() => {
+                  this.roleHoverTimeout = setTimeout(() => {
+                    this.setState({ showRoles: false });
+                  }, 150);
+                }}
+                onClick={(e) => e.stopPropagation()} // prevent dropdown close
+              >
+                {userRoleList
+                  .filter((item) => item.value)
+                  .map((role, index, arr) => (
+                    <div
+                      key={role.value}
+                      style={{
+                        padding: "10px 16px",
+                        whiteSpace: "nowrap",
+                        fontSize: "14px",
+                        color: "#475569",
+                        borderBottom: index !== arr.length - 1 ? "1px solid #f1f5f9" : "none",
+                        transition: "background-color 0.2s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#f8fafc";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      {role.label}
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        ),
+        disabled: true,
+        style: {
+          background: "#fff",
+          paddingBottom: "3px",
+          paddingTop: "3px",
+        },
+        id: "header-roles",
+      },
+
       // Profile
       {
         primaryText: <Label label="CS_HOME_HEADER_PROFILE" />,
@@ -341,6 +439,7 @@ class UserSettings extends Component {
         renderforadmin: 1,
         renderforPGREmp: 1,
       },
+
       // Logout
       {
         primaryText: <Label label="CORE_COMMON_LOGOUT" />,
@@ -354,6 +453,7 @@ class UserSettings extends Component {
         renderforPGREmp: 1,
       },
     ];
+
     // ========================================================
 
     /**
@@ -492,10 +592,8 @@ class UserSettings extends Component {
                 {/* Divider Line */}
                 <div style={{ width: "2px", height: "28px", marginLeft: "20px", backgroundColor: "#cbd5e1" }} />
               </div>
-              
             )}
 
-            
             {/* End of TTL Timer */}
           </div>
         )}
@@ -551,8 +649,7 @@ class UserSettings extends Component {
                 >
                   {userInfo.name || "Username"}
                 </span>
-                <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "400", height:"20px" 
-                }}>
+                <span style={{ fontSize: "13px", color: "#64748b", fontWeight: "400", height: "20px" }}>
                   <Label
                     label={`COMMON_MASTERS_DESIGNATION_${this.state.designation}`}
                     containerStyle={{
@@ -579,7 +676,8 @@ class UserSettings extends Component {
                   <List
                     open
                     onItemClick={(item) => {
-                      if (!item.disabled) {
+                      if (!item.disabled && item.route) {
+                        // only call for routable items
                         handleItemClick(item, false);
                       }
                     }}
@@ -589,7 +687,6 @@ class UserSettings extends Component {
                     listContainerStyle={{ background: "#ffffff" }}
                     listItemStyle={{ borderBottom: "1px solid #e0e0e0" }}
                   />
-
                 ) : (
                   ""
                 )}
