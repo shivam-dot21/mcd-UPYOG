@@ -4,6 +4,8 @@ import { useHistory, useLocation } from "react-router-dom";
 import ChangeCity from "../ChangeCity";
 import ChangeRole from "../ChangeRole";
 import ChangeLanguage from "../ChangeLanguage";
+import CustomUserDropdown from "./CustomUserDropdown";
+
 
 const TextToImg = (props) => (
   <span className="user-img-txt" onClick={props.toggleMenu} title={props.name}>
@@ -21,6 +23,9 @@ const TopBar = ({
   cityDetails,
   mobileView,
   userOptions,
+  roleOptions = [],
+  selectedRole = null,
+  handleRoleChange,
   handleUserDropdownSelection,
   logoUrl,
   showLanguageChange = true,
@@ -150,27 +155,27 @@ const TopBar = ({
                   style={
                     mobileView
                       ? {
-                          fontSize: "14px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "5px 12px",
-                          borderRadius: "6px",
-                          background: "rgba(59, 130, 246, 0.08)", // updated background
-                          color: "rgb(15, 23, 42)", // added color
-                          boxShadow: "rgba(59, 130, 246, 0.2) 0px 0px 3px inset", // added shadow
-                        }
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "5px 12px",
+                        borderRadius: "6px",
+                        background: "rgba(59, 130, 246, 0.08)", // updated background
+                        color: "rgb(15, 23, 42)", // added color
+                        boxShadow: "rgba(59, 130, 246, 0.2) 0px 0px 3px inset", // added shadow
+                      }
                       : {
-                          fontSize: "14px",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          padding: "5px 12px",
-                          borderRadius: "6px",
-                          background: "rgba(59, 130, 246, 0.08)", // updated background
-                          color: "rgb(15, 23, 42)", // added color
-                          boxShadow: "rgba(59, 130, 246, 0.2) 0px 0px 3px inset", // added shadow
-                        }
+                        fontSize: "14px",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "5px 12px",
+                        borderRadius: "6px",
+                        background: "rgba(59, 130, 246, 0.08)", // updated background
+                        color: "rgb(15, 23, 42)", // added color
+                        boxShadow: "rgba(59, 130, 246, 0.2) 0px 0px 3px inset", // added shadow
+                      }
                   }
                 >
                   <LocationIcon styles={{ width: "10px", border: "none" }} className="fill-path-primary-main" />
@@ -180,17 +185,16 @@ const TopBar = ({
               ) : (
                 <img className="state" src={logoUrl} />
               ))}
-            <div style={{ width: "2px", height: "28px", backgroundColor: "rgb(203, 213, 225" }}></div>
             <div className="left">
-              {!window.location.href.includes("employee/user/login") && !window.location.href.includes("employee/user/language-selection") && (
+              {/* {!window.location.href.includes("employee/user/login") && !window.location.href.includes("employee/user/language-selection") && (
                 <ChangeRole t={t} />
-              )}
+              )} */}
             </div>
             <div style={{ width: "2px", height: "28px", backgroundColor: "rgb(203, 213, 225" }}></div>
             <div className="left">{showLanguageChange && <ChangeLanguage dropdown={true} />}</div>
             <div style={{ width: "2px", height: "28px", backgroundColor: "rgb(203, 213, 225" }}></div>
 
-            {userDetails?.access_token && (
+            {/* {userDetails?.access_token && (
               <div className="left" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <Dropdown
                   option={userOptions}
@@ -207,6 +211,42 @@ const TopBar = ({
                       <img src={profilePic} style={{ height: "48px", width: "48px", borderRadius: "50%" }} />
                     )
                   }
+                />
+                <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                  <div
+                    style={{
+                      fontSize: "16px",
+                      fontWeight: "600",
+                      color: "#0B0C0C",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    {userDetails?.info?.name.toUpperCase() || userDetails?.info?.userInfo?.name.toUpperCase() || "Employee"}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: "400",
+                      color: "#505A5F",
+                      lineHeight: "1.2",
+                    }}
+                  >
+                    {designationName ? `${t(`COMMON_MASTERS_DESIGNATION_${designationName}`).toUpperCase()}` : ""}
+                  </div>
+                </div>
+              </div>
+            )} */}
+
+            {userDetails?.access_token && (
+              <div className="left" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <CustomUserDropdown
+                  userOptions={userOptions}
+                  roleOptions={roleOptions}
+                  selectedRole={selectedRole}
+                  handleRoleChange={handleRoleChange}
+                  profilePic={profilePic}
+                  userName={userDetails?.info?.name || userDetails?.info?.userInfo?.name || "Employee"}
+                  t={t}
                 />
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
                   <div
