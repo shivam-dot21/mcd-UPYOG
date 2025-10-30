@@ -1,4 +1,4 @@
-import { ActionBar, CloseSvg, DatePicker, Label, LinkLabel, SubmitBar, TextInput } from "@nudmcdgnpm/digit-ui-react-components";
+import { ActionBar, CloseSvg, DatePicker, Label, LinkLabel, SubmitBar, TextInput, Dropdown } from "@nudmcdgnpm/digit-ui-react-components";
 import React from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -17,6 +17,11 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
     searchFields.forEach((field) => {
       if (!data[field.name]) data.delete.push(field.name);
     });
+
+    if (data.zone) {
+      data.zone = data.zone.code;
+    }
+
     onSearch(data);
     if (type === "mobile") {
       onClose();
@@ -63,15 +68,39 @@ const SearchApplication = ({ onSearch, type, onClose, searchFields, searchParams
                   <div key={input.name} className="input-fields">
                     <span className={"mobile-input"}>
                       <Label>{input.label}</Label>
-                      {input.type !== "date" ? (
+                      {input.type !== "date" && input.type !== "select" ? (
                         <div className="field-container">
                           {input?.componentInFront ? (
-                            <span className="citizen-card-input citizen-card-input--front" style={{ flex: "none" }}>
+                            <span
+                              className="citizen-card-input citizen-card-input--front"
+                              style={{ flex: "none" }}
+                            >
                               {input?.componentInFront}
                             </span>
                           ) : null}
                           <TextInput {...input} inputRef={register} watch={watch} shouldUpdate={true} />
                         </div>
+                      ) : input.type === "select" ? (
+                        <Controller
+                          name={input.name}
+                          control={control}
+                          defaultValue={null}
+                          render={(props) => {
+                            console.log("Controller props:", props);
+                            return (
+                              <Dropdown
+                                selected={props.value}
+                                select={(selectedValue) => {
+                                  console.log("Dropdown selected:", selectedValue);
+                                  props.onChange(selectedValue);
+                                }}
+                                option={input.options}
+                                optionKey="name"
+                                t={t}
+                              />
+                            );
+                          }}
+                        />
                       ) : (
                         <Controller
                           render={(props) => <DatePicker date={props.value} onChange={props.onChange} />}

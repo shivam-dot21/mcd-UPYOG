@@ -7,6 +7,26 @@ import MobileInbox from "../components/inbox/MobileInbox";
 const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filterComponent, isInbox }) => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
   const { isLoading: isLoading, Errors, data: res } = Digit.Hooks.hrms.useHRMSCount(tenantId);
+  const { data: zoneMdmsData, isLoading: isZoneLoading } = Digit.Hooks.useCustomMDMS(
+    tenantId || searchParams?.tenantId,  // Remove .code if tenantId is already a string
+    "egov-location",
+    [
+      {
+        name: "TenantBoundary",
+      },
+    ],
+    {
+      select: (data) => {
+        const zones = data?.["egov-location"]?.TenantBoundary?.[0]?.boundary?.children || [];
+        return zones.map((zone) => ({
+          code: zone.code,
+          name: zone.name || zone.code,
+          i18text: zone.name || zone.code,
+        }));
+      },
+      enabled: !!tenantId || !!searchParams?.tenantId,
+    }
+  );
 
   const { t } = useTranslation();
   const [pageOffset, setPageOffset] = useState(initialStates.pageOffset || 0);
@@ -82,6 +102,13 @@ const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filt
       {
         label: t("HR_EMPLOYEE_ID_LABEL"),
         name: "codes",
+      },
+      {
+        label: t("HR_ZONE_LABEL"),
+        name: "zone",
+        type: "select",
+        options: zoneMdmsData,
+
       },
     ];
   };

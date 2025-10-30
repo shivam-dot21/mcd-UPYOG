@@ -180,9 +180,13 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
       const employee = hrmsResponse?.Employees?.[0];
       const zone = employee?.jurisdictions?.[0]?.zone;
       const designation = employee?.assignments?.[0]?.designation;
+      const department = employee?.assignments?.[0]?.department;
 
       if (designation) {
         Digit.SessionStorage.set("Employee.designation", designation);
+      }
+      if (department) {
+        Digit.SessionStorage.set("Employee.department", department);
       }
       if (zone) {
         Digit.SessionStorage.set("Employee.zone", zone);
