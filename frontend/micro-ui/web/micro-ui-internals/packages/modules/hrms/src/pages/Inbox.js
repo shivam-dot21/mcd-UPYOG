@@ -6,17 +6,23 @@ import MobileInbox from "../components/inbox/MobileInbox";
 
 const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filterComponent, isInbox }) => {
   const tenantId = Digit.ULBService.getCurrentTenantId();
-  const { isLoading: isLoading, data: res } = Digit.Hooks.hrms.useHRMSCount(tenantId);
+  const { isLoading: isLoading, data: countRes } = Digit.Hooks.hrms.useHRMSCount(tenantId);
   const { t } = useTranslation();
+  const loginZone = Digit.SessionStorage.get("Employee.zone");
 
   const [pageOffset, setPageOffset] = useState(initialStates.pageOffset || 0);
   const [pageSize, setPageSize] = useState(initialStates.pageSize || 10);
   const [sortParams, setSortParams] = useState(initialStates.sortParams || [{ id: "createdTime", desc: false }]);
-  const [totalRecords, setTotalReacords] = useState(undefined);
+  const [totalRecords, setTotalRecords] = useState(undefined);
 
-  const [searchParams, setSearchParams] = useState(() => initialStates.searchParams || {});
+  // Initialize search params with provided initialStates or fallback to login zone
+  const [searchParams, setSearchParams] = useState(() => {
+    const fromInitial = initialStates.searchParams || {};
+    // if initialStates provided a zone, keep it; otherwise set login zone as default
+    return { ...fromInitial, ...(fromInitial.zone ? {} : { zone: loginZone }) };
+  });
 
-  // ZONE MDMS
+  // ZONE MDMS (Dropdown Options)
   const { data: zoneMdmsData } = Digit.Hooks.useCustomMDMS(
     tenantId,
     "egov-location",
@@ -34,70 +40,70 @@ const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filt
     }
   );
 
-  // Detect zone search
+  // If the user explicitly selected a zone in searchParams -> it's a zone search
   const isZoneSearch = !!searchParams?.zone;
 
-  // 🔥 Always backend pagination — never load all
-  let paginationParams;
-
-  if (isZoneSearch) {
-    paginationParams = {
-      limit: 50,                          // FIXED 50 records per page
-      offset: pageOffset,                 // backend sends next set
-      sortOrder: sortParams?.[0]?.desc ? "DESC" : "ASC"
-    };
-  } else {
-    paginationParams = {
-      limit: pageSize,                    // Normal pagination
-      offset: pageOffset,
-      sortOrder: sortParams?.[0]?.desc ? "DESC" : "ASC"
-    };
-  }
+  // Pagination params: zone search forces limit=50
+  const paginationParams = {
+    limit: isZoneSearch ? 50 : pageSize,
+    offset: pageOffset,
+    sortOrder: sortParams?.[0]?.desc ? "DESC" : "ASC",
+  };
 
   const isupdate = Digit.SessionStorage.get("isupdate");
 
+  const finalSearchParams = {
+    ...searchParams,
+    zone: searchParams.zone || loginZone,
+  };
+
+  // Use HRMS search hook
   const { isLoading: hookLoading, data, ...rest } = Digit.Hooks.hrms.useHRMSSearch(
-    searchParams,
+    finalSearchParams,
     tenantId,
     paginationParams,
     isupdate
   );
 
-  // Reset to first page when filters change
+  // Keep totalRecords in sync if backend provides it (optional)
   useEffect(() => {
-    if (isZoneSearch) {
-      setPageSize(50);      // Zone search always shows 50 per page
+    if (rest && rest.tableConfig && typeof rest.tableConfig.totalRecords !== "undefined") {
+      setTotalRecords(rest.tableConfig.totalRecords);
     }
+  }, [rest]);
+
+  useEffect(() => {
+    if (isZoneSearch) setPageSize(50);
     setPageOffset(0);
   }, [searchParams]);
 
-  const fetchNextPage = () => {
-    setPageOffset((prev) => prev + pageSize);    // +50 when zone search
-  };
+  // Pagination controls
+  const fetchNextPage = () => setPageOffset((prev) => prev + (isZoneSearch ? 50 : pageSize));
+  const fetchPrevPage = () => setPageOffset((prev) => Math.max(0, prev - (isZoneSearch ? 50 : pageSize)));
 
-  const fetchPrevPage = () => {
-    setPageOffset((prev) => prev - pageSize);
-  };
-
+  // Filter handler — supports deleting keys by passing { delete: ["key1"] }
   const handleFilterChange = (filterParam) => {
     let keys_to_delete = filterParam.delete;
     let _new = { ...searchParams, ...filterParam };
     if (keys_to_delete) keys_to_delete.forEach((key) => delete _new[key]);
     delete _new.delete;
+
+    if (typeof _new.zone !== "undefined" && (_new.zone === null || _new.zone === "")) {
+      delete _new.zone;
+    }
     setSearchParams({ ..._new });
   };
 
   const handleSort = useCallback((args) => {
-    if (args.length === 0) return;
+    if (!args || args.length === 0) return;
     setSortParams(args);
   }, []);
 
   const handlePageSizeChange = (e) => {
-    if (!isZoneSearch) {
-      setPageSize(Number(e.target.value));   // Only normal search can edit page size
-    }
+    if (!isZoneSearch) setPageSize(Number(e.target.value));
   };
 
+  // Search UI fields
   const getSearchFields = () => {
     return [
       { label: t("HR_EMPLOYEE_ID_LABEL"), name: "codes" },
@@ -118,8 +124,10 @@ const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filt
     ];
   };
 
+  // Loading guard for initial data required to render
   if (isLoading) return <Loader />;
 
+  // Render based on device
   if (data?.length !== null) {
     const isMobile = window.Digit.Utils.browser.isMobile();
 
@@ -138,8 +146,8 @@ const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filt
           onNextPage={fetchNextPage}
           tableConfig={rest?.tableConfig}
           onPrevPage={fetchPrevPage}
-          currentPage={Math.floor(pageOffset / pageSize)}
-          pageSizeLimit={pageSize}
+          currentPage={Math.floor(pageOffset / (isZoneSearch ? 50 : pageSize))}
+          pageSizeLimit={isZoneSearch ? 50 : pageSize}
           disableSort={false}
           onPageSizeChange={handlePageSizeChange}
           parentRoute={parentRoute}
@@ -150,37 +158,38 @@ const Inbox = ({ parentRoute, businessService = "HRMS", initialStates = {}, filt
           filterComponent={filterComponent}
         />
       );
-    } else {
-      return (
-        <div>
-          {isInbox && <Header>{t("HR_HOME_SEARCH_RESULTS_HEADING")}</Header>}
-
-          <DesktopInbox
-            businessService={businessService}
-            data={data}
-            isLoading={hookLoading}
-            defaultSearchParams={initialStates.searchParams}
-            isSearch={!isInbox}
-            onFilterChange={handleFilterChange}
-            searchFields={getSearchFields()}
-            onSearch={handleFilterChange}
-            onSort={handleSort}
-            onNextPage={fetchNextPage}
-            onPrevPage={fetchPrevPage}
-            currentPage={Math.floor(pageOffset / pageSize)}
-            pageSizeLimit={pageSize}
-            disableSort={false}
-            onPageSizeChange={handlePageSizeChange}
-            parentRoute={parentRoute}
-            searchParams={searchParams}
-            sortParams={sortParams}
-            totalRecords={totalRecords}
-            filterComponent={filterComponent}
-          />
-        </div>
-      );
     }
+
+    return (
+      <div>
+        {isInbox && <Header>{t("HR_HOME_SEARCH_RESULTS_HEADING")}</Header>}
+
+        <DesktopInbox
+          businessService={businessService}
+          data={data}
+          isLoading={hookLoading}
+          defaultSearchParams={initialStates.searchParams}
+          isSearch={!isInbox}
+          onFilterChange={handleFilterChange}
+          searchFields={getSearchFields()}
+          onSearch={handleFilterChange}
+          onSort={handleSort}
+          onNextPage={fetchNextPage}
+          onPrevPage={fetchPrevPage}
+          currentPage={Math.floor(pageOffset / (isZoneSearch ? 50 : pageSize))}
+          pageSizeLimit={isZoneSearch ? 50 : pageSize}
+          disableSort={false}
+          onPageSizeChange={handlePageSizeChange}
+          parentRoute={parentRoute}
+          searchParams={searchParams}
+          sortParams={sortParams}
+          totalRecords={totalRecords}
+          filterComponent={filterComponent}
+        />
+      </div>
+    );
   }
+  return null;
 };
 
 export default Inbox;

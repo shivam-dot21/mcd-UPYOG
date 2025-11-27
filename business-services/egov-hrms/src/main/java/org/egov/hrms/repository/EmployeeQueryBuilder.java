@@ -77,16 +77,10 @@ public class EmployeeQueryBuilder {
 		            .map(String::trim)
 		            .map(String::toUpperCase)
 		            .collect(Collectors.toList());
-		    
-		    // If HQ present → skip filtering (fetch all employees)
-		    if (!zoneList.contains("HQ")) {
-		        builder.append(" AND jurisdiction.zone IN (")
-		               .append(createQuery(zoneList))
-		               .append(")");
-		        preparedStmtList.addAll(zoneList);
-		    } else {
-		        // HQ means all employees → no zone filter
-		    }
+	        builder.append(" AND jurisdiction.zone IN (")
+	               .append(createQuery(zoneList))
+	               .append(")");
+	        preparedStmtList.addAll(zoneList);
 		}
 
 		if(!CollectionUtils.isEmpty(criteria.getIds())){

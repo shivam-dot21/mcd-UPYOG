@@ -5,6 +5,7 @@ import ChangeCity from "../ChangeCity";
 import ChangeRole from "../ChangeRole";
 import ChangeLanguage from "../ChangeLanguage";
 import CustomUserDropdown from "./CustomUserDropdown";
+import FontIncrease from "./FontIncrease";
 
 
 const TextToImg = (props) => (
@@ -135,7 +136,7 @@ const TopBar = ({
       {mobileView ? <Hamburger handleClick={toggleSidebar} color="#9E9E9E" /> : null}
       {/* <img className="city" /> */}
       <span style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-        <img className="city" src="https://mcdupyog.sparrowsoftech.in/employee/static/media/mcd-logo.b45b7066.png" />
+        <img className="city" src="https://abdeas-dev.sparrowsoftech.in/employee/static/media/mcd-logo.b45b7066.png" />
 
         {!loggedin && (
           <p className="ulb" style={mobileView ? { fontSize: "14px", display: "inline-block" } : {}}>
@@ -190,6 +191,8 @@ const TopBar = ({
                 <ChangeRole t={t} />
               )} */}
             </div>
+            <div style={{ width: "2px", height: "28px", backgroundColor: "rgb(203, 213, 225" }}></div>
+            <div className="left"> <FontIncrease /></div>
             <div style={{ width: "2px", height: "28px", backgroundColor: "rgb(203, 213, 225" }}></div>
             <div className="left">{showLanguageChange && <ChangeLanguage dropdown={true} />}</div>
             <div style={{ width: "2px", height: "28px", backgroundColor: "rgb(203, 213, 225" }}></div>
