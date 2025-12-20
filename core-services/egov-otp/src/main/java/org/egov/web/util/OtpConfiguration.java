@@ -25,5 +25,8 @@ public class OtpConfiguration {
 
     @Value("${egov.otp.encrypt}")
     private boolean encryptOTP;
+    
+    @Value("${otp.rate.limit.window.seconds}")
+    private int rateLimitWindowSeconds;
 
 }
