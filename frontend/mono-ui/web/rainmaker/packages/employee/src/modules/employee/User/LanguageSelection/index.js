@@ -17,7 +17,7 @@ class LanguageSelection extends Component {
   };
 
   onLanguageSelect = () => {
-    this.props.history.push("/digit-ui/employee/user/login");
+    this.props.history.push("/user/login");
   };
 
   render() {

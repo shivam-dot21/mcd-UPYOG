@@ -80,7 +80,7 @@ class App extends Component {
   render() {
     const { toast, loading, defaultUrl, hasLocalisation } = this.props;
     let loginScreens = false;
-    let logginScreensUrls = ['/digit-ui/employee/user/login', '/employee/forgot-password', '/employee/language-selection'];
+    let logginScreensUrls = ['/employee/user/login', '/employee/forgot-password', '/employee/language-selection'];
     if (logginScreensUrls.includes(window.location.pathname)) {
       loginScreens = true;
     }    
@@ -162,7 +162,7 @@ const mapStateToProps = (state, ownProps) => {
   const { spinner } = state.common;
   const { stateInfoById } = state.common || [];
   let hasLocalisation = false;
-  let defaultUrl = process.env.REACT_APP_NAME === "Citizen" ? "/user/register" : "/digit-ui/employee/user/login";
+  let defaultUrl = process.env.REACT_APP_NAME === "Citizen" ? "/user/register" : "/user/login";
   if (stateInfoById && stateInfoById.length > 0) {
     hasLocalisation = stateInfoById[0].hasLocalisation;
     defaultUrl = stateInfoById[0].defaultUrl;
