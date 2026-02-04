@@ -6,19 +6,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import lombok.extern.slf4j.Slf4j;
 
-import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
-
-import java.io.IOException;
-import java.io.OutputStream;
-
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 @Slf4j
@@ -27,59 +19,37 @@ import java.util.Random;
 public class CaptchaController {
 
 	@GetMapping("/captcha")
-    public void generateCaptcha(HttpServletRequest request,
-                                HttpServletResponse response) throws IOException {
+    public Map<String, String> generateCaptcha(HttpServletRequest request) {
 
-        // Generate random captcha text
+        // Generate random captcha
         String captchaText = generateRandomText(6);
 
-        // Store in session
-        HttpSession session = request.getSession();
+        // Store in session (server side)
+        HttpSession session = request.getSession(true);
         session.setAttribute("CAPTCHA_VALUE", captchaText);
         session.setMaxInactiveInterval(120); // 2 minutes expiry
 
-        // Create image
-        BufferedImage image = createCaptchaImage(captchaText);
+        log.info("Captcha generated (for debug only): {}", captchaText);
 
-        response.setContentType("image/png");
-        OutputStream out = response.getOutputStream();
-        ImageIO.write(image, "png", out);
-        out.close();
+        // Send as JSON response
+        Map<String, String> response = new HashMap<>();
+        response.put("captcha", captchaText);
+
+        return response;
     }
 
     private String generateRandomText(int length) {
+
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        StringBuilder sb = new StringBuilder();
         Random random = new Random();
+
+        StringBuilder sb = new StringBuilder();
 
         for (int i = 0; i < length; i++) {
             sb.append(chars.charAt(random.nextInt(chars.length())));
         }
+
         return sb.toString();
-    }
-    
-    private BufferedImage createCaptchaImage(String text) {
-    	log.info("Headless mode: " + java.awt.GraphicsEnvironment.isHeadless());
-        int width = 160;
-        int height = 50;
-
-        BufferedImage image =
-                new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-
-        Graphics2D g = image.createGraphics();
-
-        g.setColor(Color.WHITE);
-        g.fillRect(0, 0, width, height);
-
-        // Use logical font (safe on servers)
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 30));
-        g.setColor(Color.BLACK);
-
-        g.drawString(text, 20, 35);
-
-        g.dispose();
-
-        return image;
     }
 
 }
