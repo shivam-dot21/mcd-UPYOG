@@ -95,9 +95,12 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         //  CAPTCHA VALIDATION
         // =====================================================
 
-        String captcha = details.get("captcha");
-        String captchaId = details.get("captchaId");
-
+        String encryptedCaptcha = details.get("captcha");
+        String encryptedCaptchaId = details.get("captchaId");
+        
+        String captcha = passwordCryptoUtil.decrypt(encryptedCaptcha); 
+        String captchaId = passwordCryptoUtil.decrypt(encryptedCaptchaId);
+        
         if (captchaId == null || captchaId.isEmpty()) {
             throw new OAuth2Exception("CaptchaId missing");
         }
