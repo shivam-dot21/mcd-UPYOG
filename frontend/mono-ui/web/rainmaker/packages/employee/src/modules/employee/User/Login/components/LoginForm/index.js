@@ -24,11 +24,14 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
   const loadCaptcha = async () => {
     setIsRefreshing(true);
     try {
+      // Cleanup previous object URL to prevent memory leaks
+      if (captchaImage && captchaImage.startsWith('blob:')) {
+        URL.revokeObjectURL(captchaImage);
+      }
+
       const data = await fetchCaptcha();
 
-      const decoded = data.captcha;   // 👈 decode base64
-
-      setCaptchaImage(decoded);             // now this is TEXT
+      setCaptchaImage(data.captcha);  // This is now an object URL for the image
       setCaptchaId(data.captchaId);
 
       handleFieldChange("captchaId", data.captchaId);
@@ -41,6 +44,22 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
       setIsRefreshing(false);
     }
   };
+
+  useEffect(() => {
+    if (form.error && !form.loading) {
+      loadCaptcha();
+      handleFieldChange("captcha", "");
+    }
+  }, [form.error, form.loading]);
+
+  // Cleanup object URL when component unmounts
+  useEffect(() => {
+    return () => {
+      if (captchaImage && captchaImage.startsWith('blob:')) {
+        URL.revokeObjectURL(captchaImage);
+      }
+    };
+  }, [captchaImage]);
 
   return (
     <Card
@@ -82,18 +101,27 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
               />
             </div>
             <div style={{
-              padding: "10px 16px",
+              padding: "4px",
               background: "#f5f5f5",
-              borderRadius: "6px",
-              fontSize: "20px",
-              fontWeight: "bold",
-              letterSpacing: "3px",
-              userSelect: "none",
-              MozUserSelect: "none",
-              WebkitUserSelect: "none",
-              msUserSelect: "none"
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: "50px"
             }}>
-              {captchaImage}
+              {captchaImage ? (
+                <img
+                  src={captchaImage}
+                  alt="Captcha verification"
+                  style={{
+                    maxHeight: "50px",
+                    maxWidth: "100%",
+                    display: "block"
+                  }}
+                />
+              ) : (
+                <span style={{ color: "#999" }}>Loading...</span>
+              )}
             </div>
 
             <Button variant="outlined" style={{ minWidth: "50px" }} onClick={loadCaptcha}>
