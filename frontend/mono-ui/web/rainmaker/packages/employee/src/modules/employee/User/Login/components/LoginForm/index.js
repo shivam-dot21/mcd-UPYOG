@@ -90,8 +90,20 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
             </div>
           </div>
           <Label style={{ marginBottom: "12px" }} className="text-center" bold={true} dark={true} fontSize={16} label="CORE_COMMON_LOGIN" />
-          <TextField onChange={(e, value) => handleFieldChange("username", value)} {...fields.username} />
-          <TextField onChange={(e, value) => handleFieldChange("password", value)} {...fields.password} />
+          <TextField
+            onChange={(e, value) => handleFieldChange("username", value)}
+            {...fields.username}
+            onPaste={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
+          <TextField
+            onChange={(e, value) => handleFieldChange("password", value)}
+            {...fields.password}
+            onPaste={(e) => e.preventDefault()}
+            onCopy={(e) => e.preventDefault()}
+            onContextMenu={(e) => e.preventDefault()}
+          />
           <CityPicker onChange={handleFieldChange} fieldKey="city" field={fields.city} />
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
             <div style={{ flex: 1 }}>
