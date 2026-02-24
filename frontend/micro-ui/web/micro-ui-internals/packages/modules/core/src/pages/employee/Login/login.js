@@ -202,11 +202,33 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
       body: [
         {
           label: t(userId.label),
-          type: userId.type,
+          type: "custom",
+          isMandatory: true,
           populators: {
             name: userId.name,
+            component: (props) => (
+              <input
+                value={props.value}
+                name={userId.name}
+                onChange={(e) => props.onChange(e.target.value)}
+                onCopy={(e) => e.preventDefault()}
+                onPaste={(e) => e.preventDefault()}
+                placeholder={t(userId.label)}
+                className="w-full"
+                autoComplete="off"
+                style={{
+                  width: "100%",
+                  height: "40px",
+                  padding: "8px 12px",
+                  border: "1px solid black",
+                  backgroundColor: "#eef2ff",
+                  fontSize: "14px",
+                  boxSizing: "border-box",
+                  marginBottom: "12px",
+                }}
+              />
+            ),
           },
-          isMandatory: true,
         },
         {
           label: t(password.label),
@@ -221,6 +243,8 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                   value={props.value}
                   name={password.name}
                   onChange={(e) => props.onChange(e.target.value)}
+                  onCopy={(e) => e.preventDefault()}
+                  onPaste={(e) => e.preventDefault()}
                   placeholder={t(password.label)}
                   className="w-full"
                   style={{
