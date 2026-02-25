@@ -95,6 +95,7 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
             {...fields.username}
             onPaste={(e) => e.preventDefault()}
             onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
           />
           <TextField
@@ -102,6 +103,7 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
             {...fields.password}
             onPaste={(e) => e.preventDefault()}
             onCopy={(e) => e.preventDefault()}
+            onCut={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
           />
           <CityPicker onChange={handleFieldChange} fieldKey="city" field={fields.city} />
