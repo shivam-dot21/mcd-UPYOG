@@ -196,6 +196,17 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
   };
 
   const [userId, password, city] = propsConfig.inputs;
+  const handleEnterSubmit = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const form = e.target.closest("form");
+      if (form) {
+        form.dispatchEvent(
+          new Event("submit", { bubbles: true, cancelable: true })
+        );
+      }
+    }
+  };
 
   const config = [
     {
@@ -211,6 +222,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                 value={props.value}
                 name={userId.name}
                 onChange={(e) => props.onChange(e.target.value)}
+                onKeyDown={handleEnterSubmit}
                 onCopy={(e) => e.preventDefault()}
                 onPaste={(e) => e.preventDefault()}
                 onCut={(e) => e.preventDefault()}
@@ -244,6 +256,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                   value={props.value}
                   name={password.name}
                   onChange={(e) => props.onChange(e.target.value)}
+                  onKeyDown={handleEnterSubmit}
                   onCopy={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
                   onCut={(e) => e.preventDefault()}
@@ -342,16 +355,37 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                       <RefreshIcon />
                     </button>
                   </div>
-                  <TextInput
+                  <input
+                    type="text"
                     placeholder="Enter Captcha"
                     value={value || ""}
+                    autoComplete="off"
                     onChange={(e) => {
                       setCaptchaValue(e.target.value);
                       onChange(e.target.value);
                     }}
-                    onCopy={(e) => e.preventDefault()}
                     onPaste={(e) => e.preventDefault()}
+                    onCopy={(e) => e.preventDefault()}
                     onCut={(e) => e.preventDefault()}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onDragStart={(e) => e.preventDefault()}
+                    onKeyDown={(e) => {
+                      handleEnterSubmit(e);
+                      if (e.ctrlKey || e.metaKey) {
+                        if (["c", "v", "x", "a"].includes(e.key.toLowerCase())) {
+                          e.preventDefault();
+                        }
+                      }
+                    }}
+                    style={{
+                      width: "100%",
+                      height: "40px",
+                      padding: "8px 12px",
+                      border: "1px solid black",
+                      backgroundColor: "#eef2ff",
+                      fontSize: "14px",
+                      boxSizing: "border-box",
+                    }}
                   />
                 </div>
               );
