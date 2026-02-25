@@ -213,6 +213,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                 onChange={(e) => props.onChange(e.target.value)}
                 onCopy={(e) => e.preventDefault()}
                 onPaste={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
                 placeholder={t(userId.label)}
                 className="w-full"
                 autoComplete="off"
@@ -245,6 +246,7 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                   onChange={(e) => props.onChange(e.target.value)}
                   onCopy={(e) => e.preventDefault()}
                   onPaste={(e) => e.preventDefault()}
+                  onCut={(e) => e.preventDefault()}
                   placeholder={t(password.label)}
                   className="w-full"
                   style={{
@@ -347,6 +349,9 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
                       setCaptchaValue(e.target.value);
                       onChange(e.target.value);
                     }}
+                    onCopy={(e) => e.preventDefault()}
+                    onPaste={(e) => e.preventDefault()}
+                    onCut={(e) => e.preventDefault()}
                   />
                 </div>
               );
