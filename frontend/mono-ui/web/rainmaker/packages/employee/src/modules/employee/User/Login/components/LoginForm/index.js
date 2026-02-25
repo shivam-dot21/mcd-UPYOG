@@ -10,7 +10,7 @@ import "./index.css";
 import RefreshIcon from "material-ui/svg-icons/navigation/refresh";
 import { fetchCaptcha } from "ui-utils/api";
 
-const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) => {
+const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl, submitForm }) => {
   const fields = form.fields || {};
   const submit = form.submit;
   const [captchaImage, setCaptchaImage] = useState("");
@@ -97,6 +97,11 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
             onCopy={(e) => e.preventDefault()}
             onCut={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                submitForm();
+              }
+            }}
           />
           <TextField
             onChange={(e, value) => handleFieldChange("password", value)}
@@ -105,6 +110,11 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
             onCopy={(e) => e.preventDefault()}
             onCut={(e) => e.preventDefault()}
             onContextMenu={(e) => e.preventDefault()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                submitForm();
+              }
+            }}
           />
           <CityPicker onChange={handleFieldChange} fieldKey="city" field={fields.city} />
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "10px" }}>
@@ -112,6 +122,11 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
               <TextField
                 {...fields.captcha}
                 onChange={(e, v) => handleFieldChange("captcha", v)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    submitForm();
+                  }
+                }}
               />
             </div>
             <div style={{
@@ -162,6 +177,7 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl }) =>
             }}
             variant={"contained"}
             color={"primary"}
+            type="submit"
           >
             <Label buttonLabel={true} labelStyle={{ fontWeight: 500 }} label="CORE_COMMON_CONTINUE" />
           </Button>
