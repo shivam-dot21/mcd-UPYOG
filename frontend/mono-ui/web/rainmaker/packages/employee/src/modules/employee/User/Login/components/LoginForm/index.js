@@ -122,6 +122,10 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl, subm
               <TextField
                 {...fields.captcha}
                 onChange={(e, v) => handleFieldChange("captcha", v)}
+                onPaste={(e) => e.preventDefault()}
+                onCopy={(e) => e.preventDefault()}
+                onCut={(e) => e.preventDefault()}
+                onContextMenu={(e) => e.preventDefault()}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     submitForm();
@@ -189,3 +193,4 @@ const LoginForm = ({ handleFieldChange, form, onForgotPasswdCLick, logoUrl, subm
 };
 
 export default LoginForm;
+
