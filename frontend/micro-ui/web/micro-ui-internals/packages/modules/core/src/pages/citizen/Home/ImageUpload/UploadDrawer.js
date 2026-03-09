@@ -42,37 +42,6 @@ function UploadDrawer({ setProfilePic, closeDrawer, userType, removeProfilePic ,
     });
   };
 
-  // ✅ Secure filename validation (underscore allowed)
-  const isValidFile = (file) => {
-    const allowedExtensions = [".jpg", ".jpeg", ".png"];
-    const fileName = file.name.toLowerCase();
-
-    if (!fileName || fileName.trim() === "" || fileName === "null") return false;
-
-    // Extension check
-    const isValidExtension = allowedExtensions.some((ext) => fileName.endsWith(ext));
-
-    // Security checks
-    const hasDoubleExtension = fileName.split(".").length > 2;
-    const hasDoubleDot = fileName.includes("..");
-    const hasNullByte = fileName.includes("%00");
-    const hasMetaChars = /[\x00-\x1F\x7F]/.test(fileName);
-
-    /**
-     * Allowed characters:
-     * a-z 0-9 _ - . space ( )
-     */
-    const hasSpecialChars = /[^a-z0-9_\-\. ()]/.test(fileName);
-
-    return (
-      isValidExtension &&
-      !hasDoubleExtension &&
-      !hasDoubleDot &&
-      !hasNullByte &&
-      !hasMetaChars &&
-      !hasSpecialChars
-    );
-  };
 
   useEffect(() => {
     (async () => {
@@ -81,27 +50,33 @@ function UploadDrawer({ setProfilePic, closeDrawer, userType, removeProfilePic ,
       setError(null);
       setFileChecksum(null);
 
-      // Size validation
-      if (file.size >= 1000000) {
-        showToast("error", t("CORE_COMMON_PROFILE_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
-        setError(t("CORE_COMMON_PROFILE_MAXIMUM_UPLOAD_SIZE_EXCEEDED"));
+      // Comprehensive File Validation using central utility
+      const validation = Digit.Utils.fileValidation.validateFile(file, {
+        type: "image",
+        maxSizeMB: 1,
+        sanitize: true
+      });
+
+      if (!validation.isValid) {
+        let errorMessage = "CORE_COMMON_PROFILE_INVALID_FILE_INPUT";
+        if (validation.error === "MAX_FILE_SIZE_EXCEEDED") errorMessage = "CORE_COMMON_PROFILE_MAXIMUM_UPLOAD_SIZE_EXCEEDED";
+        if (validation.error === "INVALID_FILE_EXTENSION") errorMessage = "CORE_COMMON_PROFILE_INVALID_FILE_EXTENSION";
+        if (validation.error === "MALICIOUS_FILENAME_DETECTED") errorMessage = "CORE_COMMON_PROFILE_INVALID_FILENAME";
+
+        showToast("error", t(errorMessage));
+        setError(t(errorMessage));
         return;
       }
 
-      // Filename validation
-      if (!isValidFile(file)) {
-        showToast("error", t("CORE_COMMON_PROFILE_INVALID_FILE_EXTENSION"));
-        setError(t("CORE_COMMON_PROFILE_INVALID_FILE_EXTENSION"));
-        return;
-      }
+      const validFile = validation.file;
 
       try {
-        const checksum = await calculateChecksum(file);
+        const checksum = await calculateChecksum(validFile);
         setFileChecksum(checksum);
 
         const response = await Digit.UploadServices.Filestorage(
           `${userType}-profile`,
-          file,
+          validFile,
           Digit.ULBService.getStateId(),
           checksum
         );
