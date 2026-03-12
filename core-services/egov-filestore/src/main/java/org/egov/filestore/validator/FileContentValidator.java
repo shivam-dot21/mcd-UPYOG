@@ -1,79 +1,100 @@
 package org.egov.filestore.validator;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.egov.tracer.model.CustomException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Set;
+
 @Component
 public class FileContentValidator {
-	
-	private static final Set<String> MALICIOUS_PATTERNS = new HashSet<>();
 
-	static {
-	    MALICIOUS_PATTERNS.add("<script");
-	    MALICIOUS_PATTERNS.add("<?php");
-	    MALICIOUS_PATTERNS.add("<jsp:");
-	    MALICIOUS_PATTERNS.add("<%");
-	    MALICIOUS_PATTERNS.add("eval(");
-	    MALICIOUS_PATTERNS.add("runtime.getruntime");
-	    MALICIOUS_PATTERNS.add("processbuilder");
-	    MALICIOUS_PATTERNS.add("cmd.exe");
-	    MALICIOUS_PATTERNS.add("/bin/sh");
-	}
+    // Maximum bytes to scan (200 KB)
+    private static final int MAX_SCAN_BYTES = 200 * 1024;
+
+    private static final Set<String> MALICIOUS_PATTERNS = new HashSet<>();
+
+    static {
+
+        // XSS
+        MALICIOUS_PATTERNS.add("<script");
+        MALICIOUS_PATTERNS.add("</script>");
+        MALICIOUS_PATTERNS.add("javascript:");
+        MALICIOUS_PATTERNS.add("onerror=");
+        MALICIOUS_PATTERNS.add("onload=");
+        MALICIOUS_PATTERNS.add("alert(");
+        MALICIOUS_PATTERNS.add("script>");
+        MALICIOUS_PATTERNS.add("document.cookie");
+        MALICIOUS_PATTERNS.add("window.location");
+        MALICIOUS_PATTERNS.add("onmouseover=");
+        MALICIOUS_PATTERNS.add("onclick=");
+        MALICIOUS_PATTERNS.add("iframe");
+
+        // Server-side execution
+        MALICIOUS_PATTERNS.add("<?php");
+        MALICIOUS_PATTERNS.add("<jsp:");
+        MALICIOUS_PATTERNS.add("<%");
+
+        // Command execution
+        MALICIOUS_PATTERNS.add("runtime.getruntime");
+        MALICIOUS_PATTERNS.add("processbuilder");
+        MALICIOUS_PATTERNS.add("cmd.exe");
+        MALICIOUS_PATTERNS.add("/bin/sh");
+
+        // Code execution
+        MALICIOUS_PATTERNS.add("eval(");
+    }
 
     public void validateContent(MultipartFile file, String extension) {
 
-        // Only validate text-based formats
-        if(!isTextFormat(extension)){
-            return;
+        if (file == null || file.isEmpty()) {
+            throw new CustomException(
+                    "INVALID_FILE",
+                    "File is empty or missing"
+            );
         }
 
-        try(BufferedReader reader =
-                    new BufferedReader(
-                            new InputStreamReader(
-                                    file.getInputStream(),
-                                    StandardCharsets.UTF_8))) {
+        try (BufferedInputStream inputStream =
+                     new BufferedInputStream(file.getInputStream())) {
 
-            String line;
-            int linesChecked = 0;
+        	byte[] buffer = new byte[MAX_SCAN_BYTES];
 
-            while((line = reader.readLine()) != null && linesChecked < 200){
+        	int totalRead = 0;
+        	int bytesRead;
 
-                String lower = line.toLowerCase();
+        	while (totalRead < MAX_SCAN_BYTES &&
+        	        (bytesRead = inputStream.read(buffer, totalRead, MAX_SCAN_BYTES - totalRead)) != -1) {
 
-                for(String pattern : MALICIOUS_PATTERNS){
+        	    totalRead += bytesRead;
+        	}
 
-                    if(lower.contains(pattern)){
-                        throw new CustomException(
-                                "INVALID_FILE_CONTENT",
-                                "Malicious content detected in file"
-                        );
-                    }
+        	if (totalRead <= 0) {
+        	    return;
+        	}
+
+        	String content = new String(buffer, 0, totalRead, StandardCharsets.UTF_8)
+        	        .toLowerCase();
+            for (String pattern : MALICIOUS_PATTERNS) {
+
+                if (content.contains(pattern)) {
+
+                    throw new CustomException(
+                            "INVALID_FILE_CONTENT",
+                            "Malicious content detected in uploaded file"
+                    );
                 }
-
-                linesChecked++;
             }
 
-        } catch(IOException e){
+        } catch (IOException e) {
 
             throw new CustomException(
                     "INVALID_FILE",
                     "Unable to validate file content"
             );
         }
-    }
-
-    private boolean isTextFormat(String extension){
-
-        return extension.equals("txt")
-                || extension.equals("csv")
-                || extension.equals("dxf");
     }
 }

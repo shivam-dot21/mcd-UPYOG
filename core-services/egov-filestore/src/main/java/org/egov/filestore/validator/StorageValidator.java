@@ -56,12 +56,6 @@ public class StorageValidator {
     public void validate(Artifact artifact) {
 
         MultipartFile file = artifact.getMultipartFile();
-        if(file.getSize() == 0){
-            throw new CustomException(
-                    "EG_FILESTORE_INVALID_INPUT",
-                    "Empty file not allowed"
-            );
-        }
 
         if (file == null || file.isEmpty()) {
             throw new CustomException(
