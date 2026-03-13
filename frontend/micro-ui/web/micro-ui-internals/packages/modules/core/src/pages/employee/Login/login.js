@@ -42,6 +42,21 @@ const Login = ({ config: propsConfig, t, isDisabled }) => {
     };
   }, []);
 
+  useEffect(() => {
+    const userToken = localStorage.getItem("Employee.token");
+    const userInfo = JSON.parse(localStorage.getItem("Employee.user-info"));
+
+    // If user is already logged in, redirect them to /digit-ui/employee
+    if (userToken && userInfo) {
+      let redirectPath = "/digit-ui/employee"; // default redirect path
+      history.replace(redirectPath);
+    }
+
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, [history]);
+
   const defaultCity = useMemo(() => cities?.find((c) => c.code === "dl.mcd") || null, [cities]);
 
   const fetchCaptcha = async () => {
